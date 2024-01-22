@@ -63,8 +63,8 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add README.md
-          git commit -m "uboot ${{ steps.boot-version.outputs.uboot_ver }} + opensbi ${{ steps.boot-version.outputs.opensbi_ver }}"
+          git add README.md || true
+          git commit -m "uboot ${{ steps.boot-version.outputs.uboot_ver }} + opensbi ${{ steps.boot-version.outputs.opensbi_ver }}" || true
           git push || true
           git tag ${{ steps.boot-version.outputs.tag }}
           git push origin ${{ steps.boot-version.outputs.tag }}
