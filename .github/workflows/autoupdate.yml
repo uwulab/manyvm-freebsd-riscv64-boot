@@ -1,0 +1,64 @@
+name: auto-update
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get latest version
+        id: boot-version
+        run: |
+          FREEBSD_MAJOR_VER=14
+          FREEBSD_ARCH=amd64
+          REPO_BASE_URL="http://pkg.freebsd.org/FreeBSD:${FREEBSD_MAJOR_VER}:${FREEBSD_ARCH}/latest"
+
+          sudo apt install -y zstd curl jq
+
+          curl -fSL "${REPO_BASE_URL}/packagesite.pkg" -o packagesite.tar.zst
+          zstd -d packagesite.tar.zst
+          tar -xf packagesite.tar
+
+          UBOOT_VER=$(jq -r 'select(.name=="u-boot-qemu-riscv64") | .version' < packagesite.yaml)
+          OPENSBI_VER=$(jq -r 'select(.name=="opensbi") | .version' < packagesite.yaml)
+
+          echo "tag=v${UBOOT_VER}-${OPENSBI_VER}" >> $GITHUB_OUTPUT
+          echo "uboot_ver=${UBOOT_VER}" >> $GITHUB_OUTPUT
+          echo "opensbi_ver=${OPENSBI_VER}" >> $GITHUB_OUTPUT
+
+      - name: Check if tag exists
+        uses: mukunku/tag-exists-action@v1.5.0
+        id: check-tag
+        with: 
+          tag: ${{ steps.boot-version.outputs.tag }}
+          repo: 'cocoa-xu/freebsd-riscv64-vm-boot'
+      
+      - name: Update if tag not exists
+        if: steps.check-tag.outputs.exists == 'false'
+        run: |
+          cat << EOF > README.md
+          # Boot files for riscv64 FreeBSD vm
+
+          This repo auto tracks and releases latest uboot and bios files for running riscv64 FreeBSD vm with qemu-system-riscv64.
+
+          Current latest version:
+
+            - uboot-${{ steps.boot-version.outputs.uboot_ver }}
+            - opensbi-${{ steps.boot-version.outputs.opensbi_ver }}
+          
+          EOF
+
+      - name: git commit and release
+        if: steps.check-tag.outputs.exists == 'false'
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: 'README.md'
+          message: 'uboot ${{ steps.boot-version.outputs.uboot_ver }} + opensbi ${{ steps.boot-version.outputs.opensbi_ver }}'
+          push: true
+          tag: ${{ steps.boot-version.outputs.tag }}
