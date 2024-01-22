@@ -25,8 +25,8 @@ jobs:
           ROOT_DIR=$(pwd)
           OUTPUT_DIR="${ROOT_DIR}/riscv64"
           VERSIONS="${GITHUB_REF##*/v}"
-          UBOOT_VERSION=echo $VERSIONS | awk -F'-' '{print $1}'
-          OPENSBI_VERSION=echo $VERSIONS | awk -F'-' '{print $2}'
+          UBOOT_VERSION=$(echo $VERSIONS | awk -F'-' '{print $1}')
+          OPENSBI_VERSION=$(echo $VERSIONS | awk -F'-' '{print $2}')
           
           sudo apt install -y zstd curl
           
