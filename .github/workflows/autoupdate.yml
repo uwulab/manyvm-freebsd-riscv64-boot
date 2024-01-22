@@ -30,6 +30,8 @@ jobs:
           UBOOT_VER=$(jq -r 'select(.name=="u-boot-qemu-riscv64") | .version' < packagesite.yaml)
           OPENSBI_VER=$(jq -r 'select(.name=="opensbi") | .version' < packagesite.yaml)
 
+          rm -f packagesite*
+
           echo "tag=v${UBOOT_VER}-${OPENSBI_VER}" >> $GITHUB_OUTPUT
           echo "uboot_ver=${UBOOT_VER}" >> $GITHUB_OUTPUT
           echo "opensbi_ver=${OPENSBI_VER}" >> $GITHUB_OUTPUT
