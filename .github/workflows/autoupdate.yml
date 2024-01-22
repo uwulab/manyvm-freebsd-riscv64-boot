@@ -18,7 +18,6 @@ jobs:
         id: boot-version
         run: |
           pip3 install -U lastversion
-          lastversion freebsd
           FREEBSD_MAJOR_VER=$(lastversion --sem major freebsd)
           FREEBSD_ARCH=amd64
           REPO_BASE_URL="http://pkg.freebsd.org/FreeBSD:${FREEBSD_MAJOR_VER}:${FREEBSD_ARCH}/latest"
