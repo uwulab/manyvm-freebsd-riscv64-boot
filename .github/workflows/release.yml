@@ -49,9 +49,11 @@ jobs:
           zstd -d opensbi.tar.zst
           tar -xf opensbi.tar
           cp usr/local/share/opensbi/lp64/generic/firmware/fw_jump.bin "${OUTPUT_DIR}"
+          cp usr/local/share/opensbi/lp64/generic/firmware/fw_jump.elf "${OUTPUT_DIR}"
 
       - uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
             riscv64/*.bin
+            riscv64/fw_jump.elf
