@@ -55,8 +55,8 @@ jobs:
           cd "opensbi-${OPENSBI_VERSION}"
           make PLATFORM=generic FW_PAYLOAD_PATH="${ROOT_DIR}/u-boot-${UBOOT_VERSION}/u-boot.bin"
 
-          cp platform/generic/firmware/*.bin "${OUTPUT_DIR}"
-          cp platform/generic/firmware/*.elf "${OUTPUT_DIR}"
+          cp build/platform/generic/firmware/*.bin "${OUTPUT_DIR}"
+          cp build/platform/generic/firmware/*.elf "${OUTPUT_DIR}"
 
       - uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
