@@ -18,20 +18,9 @@ jobs:
         id: boot-version
         run: |
           pip3 install -U lastversion
-          FREEBSD_MAJOR_VER=$(lastversion --sem major freebsd)
-          FREEBSD_ARCH=amd64
-          REPO_BASE_URL="http://pkg.freebsd.org/FreeBSD:${FREEBSD_MAJOR_VER}:${FREEBSD_ARCH}/latest"
 
-          sudo apt install -y zstd curl jq
-
-          curl -fSL "${REPO_BASE_URL}/packagesite.pkg" -o packagesite.tar.zst
-          zstd -d packagesite.tar.zst
-          tar -xf packagesite.tar
-
-          UBOOT_VER=$(jq -r 'select(.name=="u-boot-qemu-riscv64") | .version' < packagesite.yaml)
-          OPENSBI_VER=$(jq -r 'select(.name=="opensbi") | .version' < packagesite.yaml)
-
-          rm -f packagesite*
+          UBOOT_VER=$(lastversion https://github.com/u-boot/u-boot)
+          OPENSBI_VER=$(lastversion https://github.com/riscv-software-src/opensbi)
 
           echo "tag=v${UBOOT_VER}-${OPENSBI_VER}" >> $GITHUB_OUTPUT
           echo "uboot_ver=${UBOOT_VER}" >> $GITHUB_OUTPUT

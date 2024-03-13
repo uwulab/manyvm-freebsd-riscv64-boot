@@ -15,45 +15,52 @@ permissions:
 jobs:
   linux:
     runs-on: ubuntu-latest
-
+    env:
+      CROSS_COMPILE: riscv64-linux-gnu-
     steps:
-      - name: fetch and release
+      - name: Install Dependencies
         run: |
-          pip3 install -U lastversion
-          FREEBSD_MAJOR_VER=$(lastversion --sem major freebsd)
-          FREEBSD_ARCH=amd64
-          REPO_BASE_URL="http://pkg.freebsd.org/FreeBSD:${FREEBSD_MAJOR_VER}:${FREEBSD_ARCH}/latest"
+          sudo apt-get update
+          sudo apt-get install -y build-essential automake autoconf pkg-config bc m4 curl \
+            gcc g++ gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
+
+      - name: Compile u-boot
+        run: |
           ROOT_DIR=$(pwd)
           OUTPUT_DIR="${ROOT_DIR}/riscv64"
+          mkdir -p "${OUTPUT_DIR}"
+
+          VERSIONS="${GITHUB_REF##*/v}"
+          UBOOT_VERSION=$(echo $VERSIONS | awk -F'-' '{print $1}')
+
+          curl -fSL "https://github.com/u-boot/u-boot/archive/refs/tags/v${UBOOT_VERSION}.tar.gz" -o "u-boot-${UBOOT_VERSION}.tar.gz"
+          tar -xzf "u-boot-${UBOOT_VERSION}.tar.gz"
+          cd "u-boot-${UBOOT_VERSION}"
+          make qemu-riscv64_smode_defconfig
+          make -j$(nproc)
+
+          cp ./*.bin "${OUTPUT_DIR}"
+
+      - name: Compile opensbi
+        run: |
+          ROOT_DIR=$(pwd)
+          OUTPUT_DIR="${ROOT_DIR}/riscv64"
+
           VERSIONS="${GITHUB_REF##*/v}"
           UBOOT_VERSION=$(echo $VERSIONS | awk -F'-' '{print $1}')
           OPENSBI_VERSION=$(echo $VERSIONS | awk -F'-' '{print $2}')
-          
-          sudo apt install -y zstd curl
-          
-          UBOOT_URL="${REPO_BASE_URL}/All/u-boot-qemu-riscv64-${UBOOT_VERSION}.pkg"
-          OPENSBI_URL="${REPO_BASE_URL}/All/opensbi-${OPENSBI_VERSION}.pkg"
-          
-          mkdir -p "${OUTPUT_DIR}"
-          
-          mkdir -p "${ROOT_DIR}/uboot"
-          cd "${ROOT_DIR}/uboot"
-          curl -fSL "${UBOOT_URL}" -o u-boot-qemu-riscv64.tar.zst
-          zstd -d u-boot-qemu-riscv64.tar.zst
-          tar -xf u-boot-qemu-riscv64.tar
-          cp usr/local/share/u-boot/u-boot-qemu-riscv64/u-boot.bin "${OUTPUT_DIR}"
-          
-          mkdir -p "${ROOT_DIR}/opensbi"
-          cd "${ROOT_DIR}/opensbi"
-          curl -fSL "${OPENSBI_URL}" -o opensbi.tar.zst
-          zstd -d opensbi.tar.zst
-          tar -xf opensbi.tar
-          cp usr/local/share/opensbi/lp64/generic/firmware/fw_jump.bin "${OUTPUT_DIR}"
-          cp usr/local/share/opensbi/lp64/generic/firmware/fw_jump.elf "${OUTPUT_DIR}"
+
+          curl -fSL "https://github.com/riscv-software-src/opensbi/archive/refs/tags/v${OPENSBI_VERSION}.tar.gz" -o "opensbi-${OPENSBI_VERSION}.tar.gz"
+          tar -xzf "opensbi-${OPENSBI_VERSION}.tar.gz"
+          cd "opensbi-${OPENSBI_VERSION}"
+          make PLATFORM=generic FW_PAYLOAD_PATH="${ROOT_DIR}/u-boot-${UBOOT_VERSION}/u-boot.bin"
+
+          cp platform/generic/firmware/*.bin "${OUTPUT_DIR}"
+          cp platform/generic/firmware/*.elf "${OUTPUT_DIR}"
 
       - uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
             riscv64/*.bin
-            riscv64/fw_jump.elf
+            riscv64/*.elf
