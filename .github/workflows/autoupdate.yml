@@ -19,8 +19,10 @@ jobs:
         run: |
           pip3 install -U lastversion
 
-          UBOOT_VER=$(lastversion https://github.com/u-boot/u-boot)
-          OPENSBI_VER=$(lastversion https://github.com/riscv-software-src/opensbi)
+          UBOOT_VER=$(lastversion --format tag https://github.com/u-boot/u-boot)
+          UBOOT_VER=${UBOOT_VER#v}
+          OPENSBI_VER=$(lastversion --format tag https://github.com/riscv-software-src/opensbi)
+          OPENSBI_VER=${OPENSBI_VER#v}
 
           echo "tag=v${UBOOT_VER}-${OPENSBI_VER}" >> $GITHUB_OUTPUT
           echo "uboot_ver=${UBOOT_VER}" >> $GITHUB_OUTPUT
