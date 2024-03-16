@@ -33,7 +33,7 @@ jobs:
         id: check-tag
         with: 
           tag: ${{ steps.boot-version.outputs.tag }}
-          repo: 'cocoa-xu/freebsd-riscv64-vm-boot'
+          repo: 'uwulab/manyvm-freebsd-riscv64-boot'
       
       - name: Update if tag not exists
         if: steps.check-tag.outputs.exists != 'true'
