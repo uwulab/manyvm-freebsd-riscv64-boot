@@ -36,7 +36,7 @@ jobs:
           repo: 'cocoa-xu/freebsd-riscv64-vm-boot'
       
       - name: Update if tag not exists
-        if: steps.check-tag.outputs.exists == 'false'
+        if: steps.check-tag.outputs.exists != 'true'
         run: |
           cat << EOF > README.md
           # Boot files for riscv64 FreeBSD vm
@@ -51,7 +51,7 @@ jobs:
           EOF
 
       - name: git commit and release
-        if: steps.check-tag.outputs.exists == 'false'
+        if: steps.check-tag.outputs.exists != 'true'
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
