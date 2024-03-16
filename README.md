@@ -4,6 +4,6 @@ This repo auto tracks and releases latest uboot and bios files for running riscv
 
 Current latest version:
 
-  - uboot-2024.1
+  - uboot-2024.01
   - opensbi-1.4
 
